@@ -10,7 +10,7 @@
 #include <math.h>
 #include "kNN.h"
 
-//! Swaps the values of element a and b
+//! Swap the values of element a and b
 #define SWAP(a,b) temp=(a);(a)=(b);(b)=temp;
 
 //! Partition array elements on the respective side of the array[pivotIndex]
@@ -33,13 +33,13 @@ int partition(double *array, int *idx, int left, int right, int pivotIndex){
   return storeIndex;
 }
 
-//! Return the index of k-th smallest element of array
+//! Put the k-th smallest element of array in index-position k
 //  within left..right inclusive
 void quickselect(double *array, int *idx, int left, int right, int k){
   if(left == right){      // If the list contains only one element,
-    return;     // return that element
+    return;
   }
-  // select a random pivotIndex between left and right
+  // Select a random pivotIndex between left and right
   int pivotIndex = left + rand() % (right-left+1);
   pivotIndex = partition(array, idx, left, right, pivotIndex);
   // The pivot is in its final sorted position
@@ -52,10 +52,23 @@ void quickselect(double *array, int *idx, int left, int right, int k){
   }
 }
 
+//! Compute k nearest neighbors of each point in X [n-by-d]
+/*!
+
+\param X Corpus data points             [n-by-d]
+\param Y Query data points              [m-by-d]
+\param n Number of data points          [scalar]
+\param d Number of dimensions           [scalar]
+\param k Number of neighbors            [scalar]
+
+\return The kNN result
+*/
 knnresult kNN(double * X, double * Y, int n, int d, int k) {
   int i, j;
   double *dist = (double *)malloc(n*sizeof(double));
   int *idx = (int *)malloc(n*sizeof(int));
+
+  // Find distances
   printf("Distances:\n");
   for(i = 0; i < n; i++){
     idx[i] = i;
@@ -67,11 +80,14 @@ knnresult kNN(double * X, double * Y, int n, int d, int k) {
     printf("%d) %f\n", i, dist[i]);
   }
 
+  // Initialize result
   knnresult result;
   result.m = 1;
   result.k = k;
   result.nidx = (int *)malloc(k*sizeof(int));
   result.ndist = (double *)malloc(k*sizeof(double));
+
+  // Find k nearest neighbors using quickselect
   printf("\nNearest neighbors:\n");
   for(i = 0; i < k; i++){
     quickselect(dist, idx, 0, n-1, i);
