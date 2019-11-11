@@ -27,18 +27,17 @@ CC = gcc-7
 CFLAGS = -O3 -Wall
 
 # define any directories containing header files
-INCLUDES =
+INCLUDES = -ICBLAS/include
 
 # define library paths in addition to /usr/lib
 #   if I wanted to include libraries not in /usr/lib specify
 #   their path using -Lpath, something like:
-LDFLAGS =
+LDFLAGS = -LCBLAS/lib
 
 # define any libraries to link into executable:
 #   To ling libusb-1.0 :
 #   LIBS = -lusb-1.0
-LIBS = -lm
-
+LIBS = -lm CBLAS/lib/cblas_LINUX.a CBLAS/lib/blas_LINUX.a
 # define the source file for the library
 SRC = kNN
 
@@ -61,7 +60,7 @@ all: $(addprefix $(MAIN)_, $(TYPES))
 lib: $(addsuffix .a, $(addprefix $(SRC)_, $(TYPES)))
 
 $(MAIN)_%: $(MAIN).c $(SRC)_%.a
-	$(CC) $(CFLAGS) $(INCLUDES) -o $@ $^ $(LDFLAGS) $(LIBS)
+	gfortran $(CFLAGS) $(INCLUDES) -o $@ $^ $(LDFLAGS) $(LIBS)
 
 # this is a suffix replacement rule for building .o's from .c's
 # it uses automatic variables $<: the name of the prerequisite of

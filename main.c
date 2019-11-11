@@ -13,7 +13,7 @@ double * createRandomPoints(int n, int d){
     printf("%d) ( ", i);
     for(j = 0; j < d; j++){
       *(X + i*d + j) = (double) 10 * rand() / RAND_MAX;
-      printf("%f ", *(X + i*d + j));
+      printf("%f, ", *(X + i*d + j));
     }
     printf(")\n");
   }
@@ -22,11 +22,11 @@ double * createRandomPoints(int n, int d){
 }
 
 int main(){
-  int n = 10, d = 2, k = 3;
+  int n = 8, m = 4, d = 2, k = 2;
   srand(time(NULL));
   double *X = createRandomPoints(n, d);
-  double *Y = createRandomPoints(1, d);
-  knnresult result = kNN(X, Y, n, d, k);
+  double *Y = createRandomPoints(m, d);
+  knnresult result = kNN(X, Y, n, m, d, k);
 
   free(result.nidx);
   free(result.ndist);

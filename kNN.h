@@ -8,7 +8,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-
 // Definition of the kNN result struct
 typedef struct knnresult{
 int * nidx;           //!< Indices (0-based) of nearest neighbors   [m-by-k]
@@ -29,4 +28,4 @@ int k;                //!< Number of nearest neighbors              [scalar]
 
 \return The kNN result
 */
-knnresult kNN(double * X, double * Y, int n, int d, int k);
+knnresult kNN(double * X, double * Y, int n, int m, int d, int k);
