@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include <time.h>
-#include "kNN.h"
+#include "knnring.h"
 
 double * createRandomPoints(int n, int d){
   int i, j;
@@ -22,11 +22,20 @@ double * createRandomPoints(int n, int d){
 }
 
 int main(){
-  int n = 8, m = 4, d = 2, k = 2;
-  srand(time(NULL));
+  int n = 10, m = 10, d = 2, k = 3;
+  //srand(time(NULL));
   double *X = createRandomPoints(n, d);
   double *Y = createRandomPoints(m, d);
   knnresult result = kNN(X, Y, n, m, d, k);
+
+  int i, j;
+  for(i = 0; i < result.m; i++){
+    printf("\nNearest neighbors of query point %d:\n", i);
+    for(j = 0; j < result.k; j++){
+      printf("%d) index = %d, distance = %f\n",
+       j, result.nidx[i*k + j], result.ndist[i*k + j]);
+    }
+  }
 
   free(result.nidx);
   free(result.ndist);

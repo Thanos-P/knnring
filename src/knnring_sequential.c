@@ -9,7 +9,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include <cblas.h>
-#include "kNN.h"
+#include "knnring.h"
 
 //! Swap the values of element a and b
 #define SWAP(a,b) temp=(a);(a)=(b);(b)=temp;
@@ -66,6 +66,7 @@ void quickselect(double *array, int *idx, int left, int right, int k){
 */
 knnresult kNN(double * X, double * Y, int n, int m, int d, int k) {
   int i, j;
+  // Initialize distances and indexes arrays
   double *dist = (double *)malloc(m*n*sizeof(double));
   int *idx = (int *)malloc(m*n*sizeof(int));
 
@@ -99,7 +100,6 @@ knnresult kNN(double * X, double * Y, int n, int m, int d, int k) {
 
   // Find inverse of dist
   double *distT = (double *)malloc(m*n*sizeof(double));
-
   for(i = 0; i < n; i++){
     for(j = 0; j < m; j++){
       distT[j*n + i] = dist[i*m + j];
@@ -107,6 +107,7 @@ knnresult kNN(double * X, double * Y, int n, int m, int d, int k) {
     }
   }
 
+  // Test print
   for(i = 0; i < m; i++){
     for(j = 0; j < n; j++){
       printf("(%d) %f ", idx[i*n + j], distT[i*n + j]);
@@ -116,19 +117,18 @@ knnresult kNN(double * X, double * Y, int n, int m, int d, int k) {
 
   // Initialize result
   knnresult result;
-  result.m = 1;
+  result.m = m;
   result.k = k;
   result.nidx = (int *)malloc(m*k*sizeof(int));
   result.ndist = (double *)malloc(m*k*sizeof(double));
 
   // Find k nearest neighbors using quickselect for each query point
   for(i = 0; i < m; i++){
-    printf("\nNearest neighbors of query point %d:\n", i);
     for(j = 0; j < k; j++){
       quickselect((distT+i*n), (idx+i*n), 0, n-1, j);
+      // Store them in the appropriate positions of the struct
       result.nidx[i*k + j] = idx[i*n + j];
       result.ndist[i*k + j] = distT[i*n + j];
-      printf("%d) index = %d, distance = %f\n", j, idx[i*n + j], distT[i*n + j]);
     }
   }
 

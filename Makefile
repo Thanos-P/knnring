@@ -32,14 +32,14 @@ INCLUDES = -Iinc
 # define library paths in addition to /usr/lib
 #   if I wanted to include libraries not in /usr/lib specify
 #   their path using -Lpath, something like:
-LDFLAGS = -Llib
+LDFLAGS =
 
 # define any libraries to link into executable:
 #   To ling libusb-1.0 :
 #   LIBS = -lusb-1.0
-LIBS = -lm lib/cblas_LINUX.a lib/blas_LINUX.a
+LIBS = -lm -lblas
 # define the source file for the library
-SRC = kNN
+SRC = knnring
 
 # define the different possible executables
 TYPES = sequential
@@ -65,7 +65,7 @@ all: $(addprefix $(MAIN)_, $(TYPES))
 lib: $(addprefix $(LIBDIR)/, $(addsuffix .a, $(addprefix $(SRC)_, $(TYPES))))
 
 $(MAIN)_%: $(MAIN).c $(LIBDIR)/$(SRC)_%.a
-	gfortran $(CFLAGS) $(INCLUDES) -o $@ $^ $(LDFLAGS) $(LIBS)
+	$(CC) $(CFLAGS) $(INCLUDES) -o $@ $^ $(LDFLAGS) $(LIBS)
 
 # this is a suffix replacement rule for building .o's from .c's
 # it uses automatic variables $<: the name of the prerequisite of
