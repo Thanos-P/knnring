@@ -8,8 +8,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-#include "cblas.h"
-#include "cblas_f77.h"
+#include <cblas.h>
 #include "kNN.h"
 
 //! Swap the values of element a and b
@@ -98,6 +97,7 @@ knnresult kNN(double * X, double * Y, int n, int m, int d, int k) {
   for(i = 0; i < n*m; i++)
     dist[i] = sqrt(dist[i]);
 
+  // Find inverse of dist
   double *distT = (double *)malloc(m*n*sizeof(double));
 
   for(i = 0; i < n; i++){

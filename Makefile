@@ -27,17 +27,17 @@ CC = gcc-7
 CFLAGS = -O3 -Wall
 
 # define any directories containing header files
-INCLUDES = -ICBLAS/include
+INCLUDES = -Iinc
 
 # define library paths in addition to /usr/lib
 #   if I wanted to include libraries not in /usr/lib specify
 #   their path using -Lpath, something like:
-LDFLAGS = -LCBLAS/lib
+LDFLAGS = -Llib
 
 # define any libraries to link into executable:
 #   To ling libusb-1.0 :
 #   LIBS = -lusb-1.0
-LIBS = -lm CBLAS/lib/cblas_LINUX.a CBLAS/lib/blas_LINUX.a
+LIBS = -lm lib/cblas_LINUX.a lib/blas_LINUX.a
 # define the source file for the library
 SRC = kNN
 
@@ -46,6 +46,11 @@ TYPES = sequential
 
 # define the executable file  name
 MAIN = main
+
+# define paths to .a files
+LIBDIR = ./lib
+# and .c files
+SRCDIR = ./src
 
 #
 # The following part of the makefile is generic; it can be used to
@@ -57,21 +62,21 @@ MAIN = main
 
 all: $(addprefix $(MAIN)_, $(TYPES))
 
-lib: $(addsuffix .a, $(addprefix $(SRC)_, $(TYPES)))
+lib: $(addprefix $(LIBDIR)/, $(addsuffix .a, $(addprefix $(SRC)_, $(TYPES))))
 
-$(MAIN)_%: $(MAIN).c $(SRC)_%.a
+$(MAIN)_%: $(MAIN).c $(LIBDIR)/$(SRC)_%.a
 	gfortran $(CFLAGS) $(INCLUDES) -o $@ $^ $(LDFLAGS) $(LIBS)
 
 # this is a suffix replacement rule for building .o's from .c's
 # it uses automatic variables $<: the name of the prerequisite of
 # the rule(a .cpp file) and $@: the name of the target of the rule (a .o file)
 
-.o.a:
+$(LIBDIR)/$(SRC)_%.a: $(LIBDIR)/$(SRC)_%.o
 	ar rcs $@ $<
 
 # (see the gnu make manual section about automatic variables)
-.c.o:
+$(LIBDIR)/$(SRC)_%.o: $(SRCDIR)/$(SRC)_%.c
 	$(CC) $(CFLAGS) $(INCLUDES) -o $@ -c $<
 
 clean:
-	$(RM) *.o *~ $(addprefix $(MAIN)_, $(TYPES)) *.a
+	$(RM) *.o *~ $(addprefix $(MAIN)_, $(TYPES)) $(LIBDIR)/$(SRC)_*.a
