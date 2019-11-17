@@ -22,7 +22,7 @@ double * createRandomPoints(int n, int d){
 }
 
 int main(){
-  int n = 10, m = 10, d = 2, k = 3;
+  int n = 13, m = 4, d = 2, k = 3;
   //srand(time(NULL));
   double *X = createRandomPoints(n, d);
   double *Y = createRandomPoints(m, d);

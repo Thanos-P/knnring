@@ -23,6 +23,7 @@ int k;                //!< Number of nearest neighbors              [scalar]
 \param X Corpus data points             [n-by-d]
 \param Y Query data points              [m-by-d]
 \param n Number of data points          [scalar]
+\param m Number of query points         [scalar]
 \param d Number of dimensions           [scalar]
 \param k Number of neighbors            [scalar]
 
