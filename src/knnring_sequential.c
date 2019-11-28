@@ -11,6 +11,10 @@
 #include <cblas.h>
 #include "knnring.h"
 
+// =================
+// === UTILITIES ===
+// =================
+
 //! Swap the values of element a and b
 #define SWAP(a,b) temp=(a);(a)=(b);(b)=temp;
 
@@ -52,6 +56,10 @@ void quickselect(double *array, int *idx, int left, int right, int k){
     return quickselect(array, idx, pivotIndex+1, right, k);
   }
 }
+
+// ==================
+// === SEQUENTIAL ===
+// ==================
 
 //! Compute k nearest neighbors of each point in X [n-by-d]
 /*!
@@ -95,17 +103,28 @@ knnresult kNN(double * X, double * Y, int n, int m, int d, int k) {
 
   // MATLAB: - 2 * Y*X.' + sum(Y.^2,2) + sum(X.^2,2).'
   cblas_dgemm(order, transY, transX, m, n, d, alpha, Y, ldY, X, ldX, beta, dist, lddist);
+
+  // If corpus set is equal to query set, set diagonal to zero
+  // (which is distance of the same point)
+  // to avoid floating point errors
+  if(X == Y){
+    for(i = 0; i < n; i++){
+      dist[i*n + i] = 0.0;
+    }
+  }
+
   // MATLAB: sqrt(ans)
-  for(i = 0; i < n*m; i++)
+  for(i = 0; i < n*m; i++){
     dist[i] = sqrt(dist[i]);
+  }
 
   // Test print
-  for(i = 0; i < m; i++){
-    for(j = 0; j < n; j++){
-      printf("(%d) %f ", idx[i*n + j], dist[i*n + j]);
-    }
-    printf("\n\n");
-  }
+  // for(i = 0; i < m; i++){
+  //   for(j = 0; j < n; j++){
+  //     printf("(%d) %f ", idx[i*n + j], dist[i*n + j]);
+  //   }
+  //   printf("\n\n");
+  // }
 
   // Initialize result
   knnresult result;

@@ -22,6 +22,7 @@ SHELL := /bin/bash
 
 # define the C/C++ compiler to use,default here is clang
 CC = gcc-7
+MPICC = mpicc
 
 # define compile-time flags
 CFLAGS = -O3 -Wall
@@ -37,35 +38,37 @@ LDFLAGS =
 # define any libraries to link into executable:
 #   To ling libusb-1.0 :
 #   LIBS = -lusb-1.0
-LIBS = -lm -lblas
+LIBS = -lm -lopenblas
 # define the source file for the library
 SRC = knnring
 
 # define the different possible executables
 TYPES = sequential
+MPITYPES = mpi
 
-# define the executable file  name
+# define the executable file name
 MAIN = main
+MAINMPI = main_mpi
 
 # define paths to .a files
 LIBDIR = ./lib
 # and .c files
 SRCDIR = ./src
 
-#
-# The following part of the makefile is generic; it can be used to
-# build any executable just by changing the definitions above
-#
-
 # call everytime
 .PRECIOUS: %.a
 
-all: $(addprefix $(MAIN)_, $(TYPES))
+all: $(addprefix $(MAIN)_, $(TYPES)) \
+	$(addprefix $(MAIN)_, $(MPITYPES))
 
-lib: $(addprefix $(LIBDIR)/, $(addsuffix .a, $(addprefix $(SRC)_, $(TYPES))))
+lib: $(addprefix $(LIBDIR)/, $(addsuffix .a, $(addprefix $(SRC)_, $(TYPES)))) \
+	$(addprefix $(LIBDIR)/, $(addsuffix .a, $(addprefix $(SRC)_, $(MPITYPES))))
 
-$(MAIN)_%: $(MAIN).c $(LIBDIR)/$(SRC)_%.a
+$(MAIN)_$(TYPES): $(MAIN).c $(LIBDIR)/$(SRC)_$(TYPES).a
 	$(CC) $(CFLAGS) $(INCLUDES) -o $@ $^ $(LDFLAGS) $(LIBS)
+
+$(MAIN)_$(MPITYPES): $(MAINMPI).c $(LIBDIR)/$(SRC)_$(MPITYPES).a
+	$(MPICC) $(CFLAGS) $(INCLUDES) -o $@ $^ $(LDFLAGS) $(LIBS)
 
 # this is a suffix replacement rule for building .o's from .c's
 # it uses automatic variables $<: the name of the prerequisite of
@@ -74,9 +77,12 @@ $(MAIN)_%: $(MAIN).c $(LIBDIR)/$(SRC)_%.a
 $(LIBDIR)/$(SRC)_%.a: $(LIBDIR)/$(SRC)_%.o
 	ar rcs $@ $<
 
-# (see the gnu make manual section about automatic variables)
-$(LIBDIR)/$(SRC)_%.o: $(SRCDIR)/$(SRC)_%.c
+$(LIBDIR)/$(SRC)_$(TYPES).o: $(SRCDIR)/$(SRC)_$(TYPES).c
 	$(CC) $(CFLAGS) $(INCLUDES) -o $@ -c $<
 
+$(LIBDIR)/$(SRC)_$(MPITYPES).o: $(SRCDIR)/$(SRC)_$(MPITYPES).c
+	$(MPICC) $(CFLAGS) $(INCLUDES) -o $@ -c $<
+
 clean:
-	$(RM) *.o *~ $(addprefix $(MAIN)_, $(TYPES)) $(LIBDIR)/$(SRC)_*.a
+	$(RM) $(LIBDIR)/*.o *~ $(addprefix $(MAIN)_, $(TYPES)) \
+	$(addprefix $(MAIN)_, $(MPITYPES)) $(LIBDIR)/$(SRC)_*.a

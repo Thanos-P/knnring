@@ -1,3 +1,10 @@
+/**
+ * @file   main.c
+ * @author athanasps <athanasps@ece.auth.gr>
+ *         Thanos Paraskevas
+ *
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
@@ -5,6 +12,7 @@
 #include "knnring.h"
 
 double * createRandomPoints(int n, int d){
+
   int i, j;
   // Initialize points array
   double *X = (double *)malloc(n*d*sizeof(double));
@@ -22,20 +30,28 @@ double * createRandomPoints(int n, int d){
 }
 
 int main(){
-  int n = 13, m = 4, d = 2, k = 3;
-  //srand(time(NULL));
+
+  int n = 16;
+  int m = 16;
+  int d = 2;
+  int k = 4;
+
+  srand(time(NULL));
   double *X = createRandomPoints(n, d);
   double *Y = createRandomPoints(m, d);
-  knnresult result = kNN(X, Y, n, m, d, k);
 
-  int i, j;
-  for(i = 0; i < result.m; i++){
-    printf("\nNearest neighbors of query point %d:\n", i);
-    for(j = 0; j < result.k; j++){
-      printf("%d) index = %d, distance = %f\n",
-       j, result.nidx[i*k + j], result.ndist[i*k + j]);
-    }
-  }
+
+  knnresult result = kNN(X, X, n, n, d, k);
+
+  // Test print for overall results
+  // int i, j;
+  // for(i = 0; i < result.m; i++){
+  //   printf("\nNearest neighbors of query point %d:\n", i);
+  //   for(j = 0; j < result.k; j++){
+  //     printf("%d) index = %d, distance = %f\n",
+  //      j, result.nidx[i*k + j], result.ndist[i*k + j]);
+  //   }
+  // }
 
   free(result.nidx);
   free(result.ndist);
