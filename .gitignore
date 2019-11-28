@@ -53,3 +53,4 @@ dkms.conf
 
 # Executables
 main_*
+!main_mpi.c
