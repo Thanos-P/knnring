@@ -54,4 +54,4 @@ dkms.conf
 # Executables
 main_*
 !main_mpi.c
-src/knnring_mpi.c
+./src/knnring_mpi.c
