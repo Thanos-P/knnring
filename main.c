@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include <time.h>
+#include <sys/time.h>
 #include "knnring.h"
 
 double * createRandomPoints(int n, int d){
@@ -31,17 +32,28 @@ double * createRandomPoints(int n, int d){
 
 int main(){
 
-  int n = 16;
-  int m = 16;
-  int d = 2;
-  int k = 4;
+  int n = 1423;
+  int m = 1;
+  int d = 37;
+  int k = 13;
 
   srand(time(NULL));
   double *X = createRandomPoints(n, d);
   double *Y = createRandomPoints(m, d);
 
+  struct timeval startwtime, endwtime;
+  double totaltime;
+
+  gettimeofday(&startwtime, NULL);
 
   knnresult result = kNN(X, X, n, n, d, k);
+
+  gettimeofday(&endwtime, NULL);
+
+  totaltime = (double)((endwtime.tv_usec - startwtime.tv_usec)/1.0e6
+            + endwtime.tv_sec - startwtime.tv_sec);
+
+  printf("Total time: %f\n", totaltime);
 
   // Test print for overall results
   // int i, j;

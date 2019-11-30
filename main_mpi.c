@@ -99,10 +99,10 @@ double mpikNN(int n, int d, int k) {
     // Test print for overall results
     // int i, j;
     // for(i = 0; i < knnresall.m; i++){
-    //   printf("\n(Process: %d) Nearest neighbors of query point %d:\n", tid, i);
+    //   printf("\nNearest neighbors of query point %d:\n", i);
     //   for(j = 0; j < knnresall.k; j++){
-    //     printf("%d-%d) index = %d, distance = %f\n",
-    //      tid, j, knnresall.nidx[i*k + j], knnresall.ndist[i*k + j]);
+    //     printf("%d) index = %d, distance = %f\n",
+    //       j, knnresall.nidx[i*k + j], knnresall.ndist[i*k + j]);
     //   }
     // }
 
@@ -128,9 +128,9 @@ int main(int argc, char *argv[]){
 
   MPI_Init(&argc, &argv);
 
-  int n=1000;                 // # corpus elements per process
-  int d=10;
-  int k=10;
+  int n=1423;       // corpus elements per process
+  int d=37;         // dimensions
+  int k=13;         // nearest neighbors
 
   int numTasks, tid;
   double totaltime;
@@ -141,6 +141,21 @@ int main(int argc, char *argv[]){
   totaltime = mpikNN(n, d, k);
 
   printf("Process: %d / %d - Time: %f\n", tid, numTasks - 1, totaltime);
+
+  MPI_Barrier(MPI_COMM_WORLD);
+
+  // Find mean time
+  if(tid == 0){
+    MPI_Status mpistat;
+    double otherstime;
+    for(int i = 1; i < numTasks; i++){
+      MPI_Recv(&otherstime, 1, MPI_DOUBLE, i, 1, MPI_COMM_WORLD, &mpistat);
+      totaltime += otherstime;
+    }
+    printf("Mean time: %f\n", totaltime/numTasks);
+  }else{
+    MPI_Send(&totaltime, 1, MPI_DOUBLE, 0, 1, MPI_COMM_WORLD);
+  }
 
   MPI_Finalize();
 

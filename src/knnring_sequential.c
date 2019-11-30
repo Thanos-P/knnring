@@ -77,7 +77,15 @@ knnresult kNN(double * X, double * Y, int n, int m, int d, int k) {
   int i, j;
   // Initialize distances and indexes arrays
   double *dist = (double *)malloc(m*n*sizeof(double));
+  if(dist == NULL){
+    printf("Failed to allocate memory\n");
+    exit(EXIT_FAILURE);
+  }
   int *idx = (int *)malloc(m*n*sizeof(int));
+  if(idx == NULL){
+    printf("Failed to allocate memory\n");
+    exit(EXIT_FAILURE);
+  }
 
   // Find distances
   int inc = 1;
@@ -118,20 +126,20 @@ knnresult kNN(double * X, double * Y, int n, int m, int d, int k) {
     dist[i] = sqrt(dist[i]);
   }
 
-  // Test print
-  // for(i = 0; i < m; i++){
-  //   for(j = 0; j < n; j++){
-  //     printf("(%d) %f ", idx[i*n + j], dist[i*n + j]);
-  //   }
-  //   printf("\n\n");
-  // }
-
   // Initialize result
   knnresult result;
   result.m = m;
   result.k = k;
   result.nidx = (int *)malloc(m*k*sizeof(int));
+  if(result.nidx == NULL){
+    printf("Failed to allocate memory\n");
+    exit(EXIT_FAILURE);
+  }
   result.ndist = (double *)malloc(m*k*sizeof(double));
+  if(result.ndist == NULL){
+    printf("Failed to allocate memory\n");
+    exit(EXIT_FAILURE);
+  }
 
   // Find k nearest neighbors using quickselect for each query point
   for(i = 0; i < m; i++){

@@ -5,6 +5,9 @@
  *
  */
 
+ #ifndef KNNRING_H
+ #define KNNRING_H
+
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -42,3 +45,5 @@ knnresult kNN(double * X, double * Y, int n, int m, int d, int k);
   \return The kNN result
 */
 knnresult distrAllkNN(double * X, int n, int d, int k);
+
+#endif /* KNNRING_H */

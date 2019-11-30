@@ -58,11 +58,20 @@ SRCDIR = ./src
 # call everytime
 .PRECIOUS: %.a
 
-all: $(addprefix $(MAIN)_, $(TYPES)) \
-	$(addprefix $(MAIN)_, $(MPITYPES))
+all: $(addprefix $(MAIN)_, $(TYPES)) $(addprefix $(MAIN)_, $(MPITYPES))
 
 lib: $(addprefix $(LIBDIR)/, $(addsuffix .a, $(addprefix $(SRC)_, $(TYPES)))) \
 	$(addprefix $(LIBDIR)/, $(addsuffix .a, $(addprefix $(SRC)_, $(MPITYPES))))
+
+synchronous:
+	cp $(SRCDIR)/synchronous/$(addprefix $(SRC)_, $(MPITYPES)).c \
+	$(SRCDIR)/$(addprefix $(SRC)_, $(MPITYPES)).c
+	make all
+
+asynchronous:
+	cp $(SRCDIR)/asynchronous/$(addprefix $(SRC)_, $(MPITYPES)).c \
+	$(SRCDIR)/$(addprefix $(SRC)_, $(MPITYPES)).c
+	make all
 
 $(MAIN)_$(TYPES): $(MAIN).c $(LIBDIR)/$(SRC)_$(TYPES).a
 	$(CC) $(CFLAGS) $(INCLUDES) -o $@ $^ $(LDFLAGS) $(LIBS)

@@ -3,7 +3,7 @@
  * @author athanasps <athanasps@ece.auth.gr>
  *         Thanos Paraskevas
  *
- * This is the SYNCRONOUS implementation of MPI
+ * This is the ASYNCRONOUS implementation of MPI
  */
 
 #include <stdio.h>
@@ -229,16 +229,16 @@ knnresult distrAllkNN(double * X, int n, int d, int k){
 
   int tid, numTasks;
   int i, j;
-  MPI_Status mpistat;
-  MPI_Request mpireq;
+  MPI_Status *mpistat = (MPI_Status *)malloc(2 * sizeof(MPI_Status));
+  MPI_Request *mpireq = (MPI_Request*)malloc(2 * sizeof(MPI_Request));
 
   MPI_Comm_size(MPI_COMM_WORLD, &numTasks);
   MPI_Comm_rank(MPI_COMM_WORLD, &tid);
 
   if(tid == 0){
-    printf("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
-    printf("Running synchronous implementation\n");
-    printf("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
+    printf("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
+    printf("Running asynchronous implementation\n");
+    printf("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
   }
 
   // Data arrays / structs
@@ -252,6 +252,7 @@ knnresult distrAllkNN(double * X, int n, int d, int k){
     printf("Failed to allocate memory\n");
     exit(EXIT_FAILURE);
   }
+
   // selfknn is the result that is returned
   // newknn tracks new neighbors each iteration
   knnresult selfknn, newknn;
@@ -262,6 +263,12 @@ knnresult distrAllkNN(double * X, int n, int d, int k){
   int tag = 1;
   int size = n*d;
 
+  // Hide communication costs by sending/recieving while computing
+  // Send query points of each process to next process
+  MPI_Isend(X, size, MPI_DOUBLE, dst, tag, MPI_COMM_WORLD, mpireq);
+  // Receive new points as corpus points and keep query points for new search
+  MPI_Irecv(corpusbuffer, size, MPI_DOUBLE, rcv, tag, MPI_COMM_WORLD, mpireq+1);
+
   // First iteration for the points of each process
   selfknn = kNN(X, X, n, n, d, k);
   // Offset indexes to match starting array
@@ -269,14 +276,26 @@ knnresult distrAllkNN(double * X, int n, int d, int k){
     selfknn.nidx[i] += (tid-1+numTasks)%numTasks * n;
   }
 
-  // Send query points of each process to next process
-  MPI_Isend(X, size, MPI_DOUBLE, dst, tag, MPI_COMM_WORLD, &mpireq);
-  // Receive new points as corpus points and keep query points for new search
-  MPI_Recv(corpusbuffer, size, MPI_DOUBLE, rcv, tag, MPI_COMM_WORLD, &mpistat);
+  // Wait for sends/receives to finish before sending/recieving again
+  MPI_Waitall(2, mpireq, mpistat);
 
   for(i = 0; i < numTasks - 1; i++){
+    // Load sendbuffer with corpusbuffer
+    // corpusbuffer to be renewed with MPI_Irecv
+    // Now using sendbuffer for kNN calls since it is not altered during Isend
+    double *temp;
+    SWAP(sendbuffer, corpusbuffer);
+
+    // No need to send anything on last iteration
+    if(i != numTasks - 2){
+      // Send received points to next process
+      MPI_Isend(sendbuffer, size, MPI_DOUBLE, dst, tag, MPI_COMM_WORLD, mpireq);
+      // Receive new points
+      MPI_Irecv(corpusbuffer, size, MPI_DOUBLE, rcv, tag, MPI_COMM_WORLD, mpireq+1);
+    }
+
     // Find kNN for new set of corpus points
-    newknn = kNN(corpusbuffer, X, n, n, d, k);
+    newknn = kNN(sendbuffer, X, n, n, d, k);
     // Offset indexes to match starting array
     for(j = 0; j < newknn.m * newknn.k; j++){
       newknn.nidx[j] += ((tid-2-i+numTasks)%numTasks) * n;
@@ -286,25 +305,35 @@ knnresult distrAllkNN(double * X, int n, int d, int k){
     free(newknn.ndist);
     free(newknn.nidx);
 
-    // No need to send anything on last iteration
-    if(i == numTasks - 2)
-      break;
-
-    // Wait in case there is a previous send ongoing
-    MPI_Wait(&mpireq, &mpistat);
-    // Load sendbuffer with corpusbuffer
-    // corpusbuffer to be renewed with MPI_Recv
-    double *temp;
-    SWAP(sendbuffer, corpusbuffer);
-
-    // Send received points to next process
-    MPI_Isend(sendbuffer, size, MPI_DOUBLE, dst, tag, MPI_COMM_WORLD, &mpireq);
-    // Receive new points
-    MPI_Recv(corpusbuffer, size, MPI_DOUBLE, rcv, tag, MPI_COMM_WORLD, &mpistat);
+    // Wait for sends/receives to finish before sending/recieving again
+    MPI_Waitall(2, mpireq, mpistat);
   }
 
   free(corpusbuffer);
   free(sendbuffer);
+
+  // Global minimum/maximum computation
+  // double min = RAND_MAX, max = 0.0;
+  // for(i = 0; i < selfknn.m * selfknn.k; i++){
+  //   if(selfknn.ndist[i] < min)
+  //     min = selfknn.ndist[i];
+  //
+  //   if(selfknn.ndist[i] > max)
+  //     max = selfknn.ndist[i];
+  // }
+  //
+  // printf("Local minimum: %f\n", min);
+  // printf("Local maximum: %f\n", max);
+  //
+  // double maxAll, minAll;
+  // MPI_Reduce(&max, &maxAll, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
+  // MPI_Reduce(&min, &minAll, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
+  //
+  // if(tid == 0){
+  //   printf("Global minimum: %f\n", minAll);
+  //   printf("Global maximum: %f\n", maxAll);
+  //   printf("\n");
+  // }
 
   return selfknn;
 }
