@@ -138,9 +138,9 @@ int main(int argc, char *argv[]){
   MPI_Comm_rank(MPI_COMM_WORLD, &tid);
   MPI_Comm_size(MPI_COMM_WORLD, &numTasks);
 
+  FILE *fp;
   if(tid == 0){
     // save results in a file
-    FILE *fp;
     fp = fopen("./times.csv", "w");
     fprintf(fp, "n,d,Mean time\n");
   }
