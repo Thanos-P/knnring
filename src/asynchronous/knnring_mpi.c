@@ -228,6 +228,9 @@ void mergekNN(knnresult *selfknn, knnresult *newknn){
 knnresult distrAllkNN(double * X, int n, int d, int k){
 
   int tid, numTasks;
+  // Error handling variables
+  int err, errlen;
+  char errbuffer[MPI_MAX_ERROR_STRING];
   int i, j;
   MPI_Status *mpistat = (MPI_Status *)malloc(2 * sizeof(MPI_Status));
   MPI_Request *mpireq = (MPI_Request*)malloc(2 * sizeof(MPI_Request));
@@ -265,9 +268,17 @@ knnresult distrAllkNN(double * X, int n, int d, int k){
 
   // Hide communication costs by sending/recieving while computing
   // Send query points of each process to next process
-  MPI_Isend(X, size, MPI_DOUBLE, dst, tag, MPI_COMM_WORLD, mpireq);
+  err = MPI_Isend(X, size, MPI_DOUBLE, dst, tag, MPI_COMM_WORLD, mpireq);
+  if(err){
+    MPI_Error_string(err, errbuffer, &errlen);
+    printf("Error %d [%s]\n", err, errbuffer);
+  }
   // Receive new points as corpus points and keep query points for new search
-  MPI_Irecv(corpusbuffer, size, MPI_DOUBLE, rcv, tag, MPI_COMM_WORLD, mpireq+1);
+  err = MPI_Irecv(corpusbuffer, size, MPI_DOUBLE, rcv, tag, MPI_COMM_WORLD, mpireq+1);
+  if(err){
+    MPI_Error_string(err, errbuffer, &errlen);
+    printf("Error %d [%s]\n", err, errbuffer);
+  }
 
   // First iteration for the points of each process
   selfknn = kNN(X, X, n, n, d, k);
@@ -289,9 +300,17 @@ knnresult distrAllkNN(double * X, int n, int d, int k){
     // No need to send anything on last iteration
     if(i != numTasks - 2){
       // Send received points to next process
-      MPI_Isend(sendbuffer, size, MPI_DOUBLE, dst, tag, MPI_COMM_WORLD, mpireq);
+      err = MPI_Isend(sendbuffer, size, MPI_DOUBLE, dst, tag, MPI_COMM_WORLD, mpireq);
+      if(err){
+        MPI_Error_string(err, errbuffer, &errlen);
+        printf("Error %d [%s]\n", err, errbuffer);
+      }
       // Receive new points
-      MPI_Irecv(corpusbuffer, size, MPI_DOUBLE, rcv, tag, MPI_COMM_WORLD, mpireq+1);
+      err = MPI_Irecv(corpusbuffer, size, MPI_DOUBLE, rcv, tag, MPI_COMM_WORLD, mpireq+1);
+      if(err){
+        MPI_Error_string(err, errbuffer, &errlen);
+        printf("Error %d [%s]\n", err, errbuffer);
+      }
     }
 
     // Find kNN for new set of corpus points

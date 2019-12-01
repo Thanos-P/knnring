@@ -228,6 +228,9 @@ void mergekNN(knnresult *selfknn, knnresult *newknn){
 knnresult distrAllkNN(double * X, int n, int d, int k){
 
   int tid, numTasks;
+  // Error handling variables
+  int err, errlen;
+  char errbuffer[MPI_MAX_ERROR_STRING];
   int i, j;
   MPI_Status mpistat;
   MPI_Request mpireq;
@@ -270,9 +273,18 @@ knnresult distrAllkNN(double * X, int n, int d, int k){
   }
 
   // Send query points of each process to next process
-  MPI_Isend(X, size, MPI_DOUBLE, dst, tag, MPI_COMM_WORLD, &mpireq);
+  err = MPI_Isend(X, size, MPI_DOUBLE, dst, tag, MPI_COMM_WORLD, &mpireq);
+  if(err){
+    MPI_Error_string(err, errbuffer, &errlen);
+    printf("Error %d [%s]\n", err, errbuffer);
+  }
   // Receive new points as corpus points and keep query points for new search
-  MPI_Recv(corpusbuffer, size, MPI_DOUBLE, rcv, tag, MPI_COMM_WORLD, &mpistat);
+  err = MPI_Recv(corpusbuffer, size, MPI_DOUBLE, rcv, tag, MPI_COMM_WORLD, &mpistat);
+  if(err){
+    MPI_Error_string(err, errbuffer, &errlen);
+    printf("Error %d [%s]\n", err, errbuffer);
+  }
+
 
   for(i = 0; i < numTasks - 1; i++){
     // Find kNN for new set of corpus points
@@ -298,9 +310,17 @@ knnresult distrAllkNN(double * X, int n, int d, int k){
     SWAP(sendbuffer, corpusbuffer);
 
     // Send received points to next process
-    MPI_Isend(sendbuffer, size, MPI_DOUBLE, dst, tag, MPI_COMM_WORLD, &mpireq);
+    err = MPI_Isend(sendbuffer, size, MPI_DOUBLE, dst, tag, MPI_COMM_WORLD, &mpireq);
+    if(err){
+      MPI_Error_string(err, errbuffer, &errlen);
+      printf("Error %d [%s]\n", err, errbuffer);
+    }
     // Receive new points
-    MPI_Recv(corpusbuffer, size, MPI_DOUBLE, rcv, tag, MPI_COMM_WORLD, &mpistat);
+    err = MPI_Recv(corpusbuffer, size, MPI_DOUBLE, rcv, tag, MPI_COMM_WORLD, &mpistat);
+    if(err){
+      MPI_Error_string(err, errbuffer, &errlen);
+      printf("Error %d [%s]\n", err, errbuffer);
+    }
   }
 
   free(corpusbuffer);

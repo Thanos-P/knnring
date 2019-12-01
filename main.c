@@ -17,16 +17,11 @@ double * createRandomPoints(int n, int d){
   int i, j;
   // Initialize points array
   double *X = (double *)malloc(n*d*sizeof(double));
-  printf("POINTS\n");
   for(i = 0; i < n; i++){
-    printf("%d) ( ", i);
     for(j = 0; j < d; j++){
       *(X + i*d + j) = (double) 10 * rand() / RAND_MAX;
-      printf("%f, ", *(X + i*d + j));
     }
-    printf(")\n");
   }
-  printf("\n");
   return X;
 }
 

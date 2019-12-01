@@ -128,15 +128,22 @@ int main(int argc, char *argv[]){
 
   MPI_Init(&argc, &argv);
 
-  int n=1423;       // corpus elements per process
-  int d=37;         // dimensions
-  int k=13;         // nearest neighbors
+  int n=1500;       // corpus elements per process
+  int d=30;         // dimensions
+  int k=10;         // nearest neighbors
 
   int numTasks, tid;
   double totaltime;
 
   MPI_Comm_rank(MPI_COMM_WORLD, &tid);
   MPI_Comm_size(MPI_COMM_WORLD, &numTasks);
+
+  if(tid == 0){
+    // save results in a file
+    FILE *fp;
+    fp = fopen("./times.csv", "w");
+    fprintf(fp, "n,d,Mean time\n");
+  }
 
   totaltime = mpikNN(n, d, k);
 
@@ -153,8 +160,13 @@ int main(int argc, char *argv[]){
       totaltime += otherstime;
     }
     printf("Mean time: %f\n", totaltime/numTasks);
+    fprintf(fp, "%d,%d,%f\n", n, d, totaltime/numTasks);
   }else{
     MPI_Send(&totaltime, 1, MPI_DOUBLE, 0, 1, MPI_COMM_WORLD);
+  }
+
+  if(tid == 0){
+    fclose(fp);
   }
 
   MPI_Finalize();
